@@ -7,6 +7,17 @@ var error = debug('webot-example:error');
 
 var package_info = require('../package.json');
 
+var google_client_id = process.env.GCLIENTID;
+var google_client_secret = process.env.GCLIENTSECRET;
+
+var google = require('googleapis');
+var OAuth2 = google.auth.OAuth2;
+var oauth2Client = new OAuth2(google_client_id, google_client_secret, 'urn:ietf:wg:oauth:2.0:oob');
+var ad_client_id = '';
+var end_date_str = '';
+var query_result = '';
+
+
 module.exports = exports = function(webot){
   var reg_help = /^(help|\?|帮助)$/i
   webot.set({
@@ -36,16 +47,19 @@ module.exports = exports = function(webot){
   });
 
   webot.waitRule('verify', function(info) {
+    var rewaitCount = info.session.rewait_count || 0;
+    if (rewaitCount >= 2) {
+      info.resolve();
+      return '请重新申请一个验证码!';
+    }
+
     if (info.text.indexOf('verify: ') != 0) {
       info.rewait();
-      return '错误的格式。请使用\'verify: [验证码]\'的格式将验证码发送给我'
+      return '错误的格式。请使用\'verify: [验证码]\'的格式将验证码发送给我';
     }
     else {
       code = info.text.replace('verify: ', '');
-      ad_client_id = info.session.ad_client_id;
-      end_date_str = info.session.end_date_str;
-      oauth2Client = info.session.oauth2Client;
-
+      console.log(code);
       oauth2Client.getToken(code, function (err, tokens) {
         if (err) {
           throw err;
@@ -77,7 +91,9 @@ module.exports = exports = function(webot){
             for (let col of row)
             reply = reply + col + '  ';
           }
+          query_result = reply;
         });
+        return 'query_result';
       });
     }
   });
@@ -85,16 +101,20 @@ module.exports = exports = function(webot){
 
   webot.set('query', {
     description: '查询',
-    pattern: /^ *query (ca-pub-.*) (201\d-\d\d-\d\d) *$/i,
+    pattern: /^ *查询 ca-pub-.* 201\d-\d\d-\d\d *$/i,
     handler: function(info){
-      info.session.ad_client_id = info.param[0];
-      info.session.end_date_str = info.param[1];
+      ad_client_id = info.text.split(' ')[1].replace(' ', '');
+      end_date_str = info.text.split(' ')[2].replace(' ', '');
 
-      var OAuth2 = google.auth.OAuth2;
-      var oauth2Client = new OAuth2('your Google client ID',
-      'your Google client secret',
-      'urn:ietf:wg:oauth:2.0:oob');
+      google = require('googleapis');
+      OAuth2 = google.auth.OAuth2;
+      oauth2Client = new OAuth2(google_client_id,
+				    google_client_secret,
+                        		'urn:ietf:wg:oauth:2.0:oob');
+/*
       info.session.oauth2Client = oauth2Client;
+      info.session.google = google;
+*/
 
       google.options({ auth: oauth2Client });
       var auth_url = oauth2Client.generateAuthUrl({
@@ -104,7 +124,7 @@ module.exports = exports = function(webot){
       info.wait('verify');
       var reply = {
         title: '请先授权我帮您查询7日内您的Adx账号数据',
-        pic: 'https://en.wikipedia.org/wiki/Google_logo#/media/File:Google_2015_logo.svg',
+        pic: 'http://marketing.by/upload/medialibrary/577/doublecklock-logo.png',
         url: auth_url,
         description: [
           '请在获取验证码后按照\'verify: [验证码]\'的格式将验证码发送给我'
