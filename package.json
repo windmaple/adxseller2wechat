@@ -1,7 +1,7 @@
 {
-  "name": "weixin-robot-example",
-  "version": "0.0.5",
-  "main": "app.js",
+  "name": "adxseller2wechat.js",
+  "version": "0.9",
+  "main": "adxseller2wechat.js",
   "dependencies": {
     "express": "~3.0",
     "request": "~2.12",
@@ -26,14 +26,14 @@
   "keywords": [
     "weixin",
     "webot",
-    "wechat"
+    "wechat",
+    "adxseller"
   ],
-  "description": "weixin-robot 模块示例",
-  "repository": "https://github.com/node-webot/webot-example.git",
-  "author": "Jesse Yang <jyyjcc@gmail.com>",
+  "description": "adxseller2wechat, based on weixin-robot",
+  "repository": "https://github.com/windmaple/adxseller2wechat.git",
+  "author": "windmaple",
   "contributors": [
-    "Jesse Yang <jyyjcc@gmail.com> (http://github.com/ktmud)",
-    "TZ <atian25@qq.com> (http://atian25.iteye.com/)"
+    "windmaple"
   ],
   "license": "MIT"
 }
