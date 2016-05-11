@@ -1,6 +1,6 @@
 {
   "name": "adxseller2wechat.js",
-  "version": "0.9",
+  "version": "0.9.0",
   "main": "adxseller2wechat.js",
   "dependencies": {
     "express": "~3.0",
@@ -20,8 +20,7 @@
     "npm" : ">=1.1.6"
   },
   "scripts": {
-    "start": "node app.js",
-    "test": "make test"
+    "start": "node adxseller2wechat.js"
   },
   "keywords": [
     "weixin",

@@ -38,7 +38,7 @@ module.exports = exports = function(webot){
   webot.waitRule('verify', function(info) {
     if (info.text.indexOf('verify: ') != 0) {
       info.rewait();
-      return "错误的格式。请使用'verify: [验证码]'的格式将验证码发送给我'"
+      return '错误的格式。请使用\'verify: [验证码]\'的格式将验证码发送给我'
     }
     else {
       code = info.text.replace('verify: ', '');
@@ -79,46 +79,47 @@ module.exports = exports = function(webot){
           }
         });
       });
-    });
+    }
+  });
 
 
-    webot.set('query', {
-      description: '查询',
-      pattern: /^ *query (ca-pub-.*) (201\d-\d\d-\d\d) *$/i,
-      handler: function(info){
-        info.session.ad_client_id = info.param[0];
-        info.session.end_date_str = info.param[1];
+  webot.set('query', {
+    description: '查询',
+    pattern: /^ *query (ca-pub-.*) (201\d-\d\d-\d\d) *$/i,
+    handler: function(info){
+      info.session.ad_client_id = info.param[0];
+      info.session.end_date_str = info.param[1];
 
-        var OAuth2 = google.auth.OAuth2;
-        var oauth2Client = new OAuth2('your Google client ID',
-        'your Google client secret',
-        'urn:ietf:wg:oauth:2.0:oob');
-        info.session.oauth2Client = oauth2Client;
+      var OAuth2 = google.auth.OAuth2;
+      var oauth2Client = new OAuth2('your Google client ID',
+      'your Google client secret',
+      'urn:ietf:wg:oauth:2.0:oob');
+      info.session.oauth2Client = oauth2Client;
 
-        google.options({ auth: oauth2Client });
-        var auth_url = oauth2Client.generateAuthUrl({
-          access_type: 'offline',
-          scope: 'https://www.googleapis.com/auth/adexchange.seller.readonly'
-        });
-        info.wait('verify');
-        var reply = {
-          title: '请先授权我帮您查询7日内您的Adx账号数据',
-          pic: 'https://en.wikipedia.org/wiki/Google_logo#/media/File:Google_2015_logo.svg',
-          url: auth_url,
-          description: [
-            '请在获取验证码后按照'verify: [验证码]'的格式将验证码发送给我'
-          ].join('\n')
-        };
-        return reply;
-      }
-    });
+      google.options({ auth: oauth2Client });
+      var auth_url = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: 'https://www.googleapis.com/auth/adexchange.seller.readonly'
+      });
+      info.wait('verify');
+      var reply = {
+        title: '请先授权我帮您查询7日内您的Adx账号数据',
+        pic: 'https://en.wikipedia.org/wiki/Google_logo#/media/File:Google_2015_logo.svg',
+        url: auth_url,
+        description: [
+          '请在获取验证码后按照\'verify: [验证码]\'的格式将验证码发送给我'
+        ].join('\n')
+      };
+      return reply;
+    }
+  });
 
-    //所有消息都无法匹配时的fallback
-    webot.set(/.*/, function(info){
-      // 利用 error log 收集听不懂的消息，以利于接下来完善规则
-      // 你也可以将这些 message 存入数据库
-      log('unhandled message: %s', info.text);
-      info.flag = true;
-      return '你发送了「' + info.text + '」,可惜我太笨了,听不懂. 发送: help 查看可用的指令';
-    });
-  };
+  //所有消息都无法匹配时的fallback
+  webot.set(/.*/, function(info){
+    // 利用 error log 收集听不懂的消息，以利于接下来完善规则
+    // 你也可以将这些 message 存入数据库
+    log('unhandled message: %s', info.text);
+    info.flag = true;
+    return '你发送了「' + info.text + '」,可惜我太笨了,听不懂. 发送: help 查看可用的指令';
+  });
+};
