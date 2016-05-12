@@ -31,7 +31,7 @@ module.exports = exports = function(webot){
     handler: function(info){
       var reply = {
         title: '感谢您使用adxseller2wechat机器人',
-        pic: 'https://en.wikipedia.org/wiki/Google_logo#/media/File:Google_2015_logo.svg',
+        pic: 'http://marketing.by/upload/medialibrary/577/doublecklock-logo.png',
         url: 'https://www.google.com/adxseller',
         description: [
           '请按如下格式输入信息来查询7日AdX数据:',
@@ -109,12 +109,8 @@ module.exports = exports = function(webot){
       google = require('googleapis');
       OAuth2 = google.auth.OAuth2;
       oauth2Client = new OAuth2(google_client_id,
-				    google_client_secret,
-                        		'urn:ietf:wg:oauth:2.0:oob');
-/*
-      info.session.oauth2Client = oauth2Client;
-      info.session.google = google;
-*/
+				                        google_client_secret,
+                        		    'urn:ietf:wg:oauth:2.0:oob');
 
       google.options({ auth: oauth2Client });
       var auth_url = oauth2Client.generateAuthUrl({
