@@ -15,7 +15,8 @@ var OAuth2 = google.auth.OAuth2;
 var oauth2Client = new OAuth2(google_client_id, google_client_secret, 'urn:ietf:wg:oauth:2.0:oob');
 var ad_client_id = '';
 var end_date_str = '';
-var query_result = '';
+
+//var request = require('request');
 
 
 module.exports = exports = function(webot){
@@ -46,25 +47,18 @@ module.exports = exports = function(webot){
     }
   });
 
-  webot.waitRule('verify', function(info) {
-    var rewaitCount = info.session.rewait_count || 0;
-    if (rewaitCount >= 2) {
-      info.resolve();
-      return '请重新申请一个验证码!';
-    }
-
-    if (info.text.indexOf('verify: ') != 0) {
-      info.rewait();
-      return '错误的格式。请使用\'verify: [验证码]\'的格式将验证码发送给我';
-    }
-    else {
-      code = info.text.replace('verify: ', '');
+  /*
+  webot.set('verify', {
+    description: '查询',
+    pattern: /verify /i,
+    handler: function (info) {
+      code = info.text.split(' ')[1].replace(' ', '');
       console.log(code);
       oauth2Client.getToken(code, function (err, tokens) {
         if (err) {
           throw err;
         }
-
+        console.log(tokens);
         oauth2Client.setCredentials(tokens);
         var adxseller = google.adexchangeseller('v2.0');
 
@@ -80,7 +74,7 @@ module.exports = exports = function(webot){
           endDate: end_date_str,
           dimension: 'DATE',
           metric: ['AD_REQUESTS', 'AD_REQUESTS_COVERAGE',
-          'COST_PER_CLICK', 'AD_REQUESTS_RPM', 'EARNINGS'],
+            'COST_PER_CLICK', 'AD_REQUESTS_RPM', 'EARNINGS'],
         }, function (err, result) {
           if (err) throw err;
           var result = 'I\'m in callback';
@@ -96,27 +90,29 @@ module.exports = exports = function(webot){
       });
     }
   });
-
+  */
 
   webot.set('query', {
     description: '查询',
-    pattern: /^ *查询 ca-pub-.* 201\d-\d\d-\d\d *$/i,
+    pattern: /^ *query ca-pub-.* 201\d-\d\d-\d\d *$/i,
     handler: function(info){
       ad_client_id = info.text.split(' ')[1].replace(' ', '');
       end_date_str = info.text.split(' ')[2].replace(' ', '');
 
+/*
       google = require('googleapis');
       OAuth2 = google.auth.OAuth2;
+
       oauth2Client = new OAuth2(google_client_id,
 				                        google_client_secret,
                         		    'urn:ietf:wg:oauth:2.0:oob');
-
+*/
       google.options({ auth: oauth2Client });
       var auth_url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: 'https://www.googleapis.com/auth/adexchange.seller.readonly'
       });
-      info.wait('verify');
+      //info.wait('verify');
       var reply = {
         title: '请先授权我帮您查询7日内您的Adx账号数据',
         pic: 'http://marketing.by/upload/medialibrary/577/doublecklock-logo.png',
@@ -127,6 +123,60 @@ module.exports = exports = function(webot){
       };
       return reply;
     }
+  });
+
+  function generate_report(code, cb){
+    console.log(code);
+    oauth2Client.getToken(code, function (err, tokens) {
+      if (err) {
+        throw err;
+      }
+      oauth2Client.setCredentials(tokens);
+      var adxseller = google.adexchangeseller('v2.0');
+
+      account_id = ad_client_id.replace('ca-pub-', 'pub-');
+      var end_date = new Date(end_date_str);
+      var start_date = end_date;
+      start_date.setDate(start_date.getDate() - 7);
+      var start_date_str = start_date.toISOString().slice(0,10);
+      report_json = adxseller.accounts.reports.generate({
+        auth: oauth2Client,
+        accountId: account_id,
+        startDate: start_date_str,
+        endDate: end_date_str,
+        dimension: 'DATE',
+        metric: ['AD_REQUESTS', 'AD_REQUESTS_COVERAGE',
+          'COST_PER_CLICK', 'AD_REQUESTS_RPM', 'EARNINGS'],
+      }, function (err, result) {
+        if (err) throw err;
+
+        var reply = '';
+        for (let header of result.headers) reply = reply + header.name + '  ';
+        for (let row of result.rows)
+        {
+          reply = reply + '\n';
+          for (let col of row)
+            reply = reply + col + '  ';
+        }
+        return cb(null, reply);
+      });
+    });
+  };
+
+  function do_reporting(info, next){
+    // pattern的解析结果将放在param里
+    var q = info.text.split(' ')[1].replace(' ', '');  //info.param[1];
+    log('searching: ', q);
+    // 从某个地方搜索到数据...
+    return generate_report(q , next);
+  }
+
+  // 可以通过回调返回结果
+  webot.set('search', {
+    description: '发送: s 关键词 ',
+    pattern: /^ *verify /i,
+    //handler也可以是异步的
+    handler: do_reporting
   });
 
   //所有消息都无法匹配时的fallback
