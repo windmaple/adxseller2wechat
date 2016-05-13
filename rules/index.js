@@ -42,56 +42,11 @@ module.exports = exports = function(webot){
           '查询   ca-pub-999999999999   2016-05-10'
         ].join('\n')
       };
-      // 返回值如果是list，则回复图文消息列表
+
       return reply;
     }
   });
-
-  /*
-  webot.set('verify', {
-    description: '查询',
-    pattern: /verify /i,
-    handler: function (info) {
-      code = info.text.split(' ')[1].replace(' ', '');
-      console.log(code);
-      oauth2Client.getToken(code, function (err, tokens) {
-        if (err) {
-          throw err;
-        }
-        console.log(tokens);
-        oauth2Client.setCredentials(tokens);
-        var adxseller = google.adexchangeseller('v2.0');
-
-        account_id = ad_client_id.replace('ca-pub-', 'pub-');
-        var end_date = new Date(end_date_str);
-        var start_date = end_date;
-        start_date.setDate(start_date.getDate() - 7);
-        var start_date_str = start_date.toISOString().slice(0,10);
-        report_json = adxseller.accounts.reports.generate({
-          auth: oauth2Client,
-          accountId: account_id,
-          startDate: start_date_str,
-          endDate: end_date_str,
-          dimension: 'DATE',
-          metric: ['AD_REQUESTS', 'AD_REQUESTS_COVERAGE',
-            'COST_PER_CLICK', 'AD_REQUESTS_RPM', 'EARNINGS'],
-        }, function (err, result) {
-          if (err) throw err;
-          var result = 'I\'m in callback';
-          // for (var header of result.headers) reply = reply + header.name + '  ';
-          // for (var row of result.rows)
-          // {
-          //   reply = reply + '\n';
-          //   for (var col of row)
-          //   reply = reply + col + '  ';
-          // }
-          info.reply = result;
-        });
-      });
-    }
-  });
-  */
-
+  
   webot.set('query', {
     description: '查询',
     pattern: /^ *query ca-pub-.* 201\d-\d\d-\d\d *$/i,
@@ -99,14 +54,6 @@ module.exports = exports = function(webot){
       ad_client_id = info.text.split(' ')[1].replace(' ', '');
       end_date_str = info.text.split(' ')[2].replace(' ', '');
 
-/*
-      google = require('googleapis');
-      OAuth2 = google.auth.OAuth2;
-
-      oauth2Client = new OAuth2(google_client_id,
-				                        google_client_secret,
-                        		    'urn:ietf:wg:oauth:2.0:oob');
-*/
       google.options({ auth: oauth2Client });
       var auth_url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -118,7 +65,7 @@ module.exports = exports = function(webot){
         pic: 'http://marketing.by/upload/medialibrary/577/doublecklock-logo.png',
         url: auth_url,
         description: [
-          '请在获取验证码后按照\'verify: [验证码]\'的格式将验证码发送给我'
+          '请在获取验证码后按照\'verify [验证码]\'的格式将验证码发送给我'
         ].join('\n')
       };
       return reply;
@@ -150,13 +97,14 @@ module.exports = exports = function(webot){
       }, function (err, result) {
         if (err) throw err;
 
+        console.log(result);
         var reply = '';
-        for (let header of result.headers) reply = reply + header.name + '  ';
-        for (let row of result.rows)
-        {
-          reply = reply + '\n';
-          for (let col of row)
-            reply = reply + col + '  ';
+        for (let header of result.headers) reply = reply + header.name + '  '
+
+        for (let row of result.rows) {
+          reply = reply + '\n'
+          for (let col of row) say = say + col + '  ';
+
         }
         return cb(null, reply);
       });
@@ -164,16 +112,14 @@ module.exports = exports = function(webot){
   };
 
   function do_reporting(info, next){
-    // pattern的解析结果将放在param里
-    var q = info.text.split(' ')[1].replace(' ', '');  //info.param[1];
-    log('searching: ', q);
-    // 从某个地方搜索到数据...
+    var q = info.text.split(' ')[1].replace(' ', '');
+
     return generate_report(q , next);
   }
 
-  // 可以通过回调返回结果
-  webot.set('search', {
-    description: '发送: s 关键词 ',
+
+  webot.set('report', {
+    description: 'generate report ',
     pattern: /^ *verify /i,
     //handler也可以是异步的
     handler: do_reporting
