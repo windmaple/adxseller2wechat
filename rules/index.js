@@ -97,14 +97,14 @@ module.exports = exports = function(webot){
       }, function (err, result) {
         if (err) throw err;
 
-        console.log(result);
         var reply = '';
         for (let header of result.headers) reply = reply + header.name + '  '
+        if (result.rows) {
+          for (let row of result.rows) {
+            reply = reply + '\n'
+            for (let col of row) say = say + col + '  ';
 
-        for (let row of result.rows) {
-          reply = reply + '\n'
-          for (let col of row) say = say + col + '  ';
-
+          }
         }
         return cb(null, reply);
       });
