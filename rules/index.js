@@ -66,13 +66,13 @@ module.exports = exports = function(webot){
         }
 
         oauth2Client.setCredentials(tokens);
-        let adxseller = google.adexchangeseller('v2.0');
+        var adxseller = google.adexchangeseller('v2.0');
 
         account_id = ad_client_id.replace('ca-pub-', 'pub-');
-        let end_date = new Date(end_date_str);
-        let start_date = end_date;
+        var end_date = new Date(end_date_str);
+        var start_date = end_date;
         start_date.setDate(start_date.getDate() - 7);
-        let start_date_str = start_date.toISOString().slice(0,10);
+        var start_date_str = start_date.toISOString().slice(0,10);
         report_json = adxseller.accounts.reports.generate({
           auth: oauth2Client,
           accountId: account_id,
@@ -81,19 +81,18 @@ module.exports = exports = function(webot){
           dimension: 'DATE',
           metric: ['AD_REQUESTS', 'AD_REQUESTS_COVERAGE',
           'COST_PER_CLICK', 'AD_REQUESTS_RPM', 'EARNINGS'],
-        }, (err, result) => {
+        }, function (err, result) {
           if (err) throw err;
-          var reply = '';
-          for (let header of result.headers) reply = reply + header.name + '  ';
-          for (let row of result.rows)
-          {
-            reply = reply + '\n';
-            for (let col of row)
-            reply = reply + col + '  ';
-          }
-          query_result = reply;
+          var result = 'I\'m in callback';
+          // for (var header of result.headers) reply = reply + header.name + '  ';
+          // for (var row of result.rows)
+          // {
+          //   reply = reply + '\n';
+          //   for (var col of row)
+          //   reply = reply + col + '  ';
+          // }
+          info.reply = result;
         });
-        return 'query_result';
       });
     }
   });
